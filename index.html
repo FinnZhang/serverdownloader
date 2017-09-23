@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title> file download</title>
+</head>
+<body>
+<h1>serverdownloader</h1>
+<form action="/download" method="post" enctype="multipart/form-data">
+Download Link: <input type="text" name="name"  style="width:100%;margin:auto"><br/>
+<input type="submit" value="download to server"><br/>
+</form>
+<br/>
+<a href="/clear">clear all files</a><br>
+<a href="/list">list all files</a>
+<hr>
+<h1>Upload from Local</h1>
+<form action="/upload" method="post" enctype="multipart/form-data">
+   Choose local file:<input type="file" name="file"><br><br>
+    <input type="submit" value="Upload from local">
+ </form>
+    
+</body>
+</html>
