@@ -2,104 +2,58 @@ package main
 
 import (
 	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
-	"os"
-	"os/exec"
-	"path"
+	"path/filepath"
 	"strings"
-
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
 )
 
-func download(c echo.Context) error {
-	name := c.FormValue("name")
-	wgetCmd := exec.Command("wget", "-P", "./public", name)
-	wgetCmd.Run()
-
-	return c.HTML(http.StatusOK, lsCmd())
+func home(w http.ResponseWriter, r *http.Request) {
+	bs, err := ioutil.ReadFile("./index.html")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	_, err = w.Write(bs)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
-func upload(c echo.Context) error {
-
-	file, err := c.FormFile("file")
+func download(w http.ResponseWriter, r *http.Request) {
+	url := r.FormValue("url")
+	if len(strings.Trim(url, " ")) == 0 {
+		return
+	}
+	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	src, err := file.Open()
+	defer resp.Body.Close()
+	//get header
+	fileName := resp.Header.Get("Content-Disposition")
+	contentType := resp.Header.Get("Content-Type")
+	contentLen := resp.Header.Get("Content-Length")
+	if fileName == "" {
+		fileName = filepath.Base(url)
+	}
+	//set new header
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Length", contentLen)
+
+	_, err = io.Copy(w, resp.Body)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	defer src.Close()
-
-	dst, err := os.Create(path.Join("./public", file.Filename))
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
-	if _, err := io.Copy(dst, src); err != nil {
-		return err
-	}
-	return c.HTML(http.StatusOK, lsCmd())
-}
-
-func list(c echo.Context) error {
-	html := lsCmd()
-	if html == "" {
-		return c.Redirect(http.StatusTemporaryRedirect, "/")
-	}
-	return c.HTML(http.StatusOK, lsCmd())
-}
-
-func lsCmd() string {
-
-	if _, err := os.Stat("./public"); os.IsNotExist(err) {
-		os.Mkdir("./public", 0644)
-	}
-
-	lsCmd := exec.Command("ls", "public")
-	lsOut, err := lsCmd.Output()
-	if err != nil {
-		panic(err)
-	}
-	files := strings.Split(string(lsOut), "\n")
-	var html string
-	for _, file := range files {
-		if file == "" {
-			continue
-		}
-		a := `<a href="/static/` + file + `">` + file + `</a>` + `<br>`
-		html = html + a
-	}
-	return html
-}
-
-func clear(c echo.Context) error {
-	err := os.RemoveAll("./public")
-	if err != nil {
-		return c.HTML(http.StatusOK, err.Error())
-	}
-	err = os.Mkdir("./public", 0777)
-	if err != nil {
-		return c.HTML(http.StatusOK, err.Error())
-	}
-	return c.Redirect(http.StatusTemporaryRedirect, "/")
 }
 
 func main() {
-	e := echo.New()
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	e.GET("/", func(c echo.Context) error {
-		return c.File("index.html")
-	})
-	e.GET("/clear", clear)
-	e.GET("/list", list)
-	e.POST("/download", download)
-	e.POST("/upload", upload)
-	e.Static("/static", "./public")
-
-	e.Logger.Fatal(e.Start(":80"))
+	http.HandleFunc("/", home)
+	http.HandleFunc("/dl", download)
+	http.ListenAndServe(":80", nil)
 
 }
