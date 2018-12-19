@@ -1,24 +1,32 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>downloader</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
 </head>
+
 <body>
-<h1>serverdownloader</h1>
-<form action="/dl" method="post" enctype="multipart/form-data">
-Download Link: <input type="text" name="url"  style="width:100%;margin:auto"><br/>
-<input type="submit" value="download to server"><br/>
-</form>
-<br/>
-<a href="/clear">clear all files</a><br>
-<a href="/list">list all files</a>
-<hr>
-<h1>Upload from Local</h1>
-<form action="/upload" method="post" enctype="multipart/form-data">
-   Choose local file:<input type="file" name="file"><br><br>
-    <input type="submit" value="Upload from local">
- </form>
-    
+    <div class="text-center">
+        <h1>Server Downloader</h1>
+        <form action="/dl" method="post" enctype="multipart/form-data">
+            <label for="inputURL">Download Link</label>
+            <input type="text" class="form-control" id="inputURL" name="url" style="width:60%;margin:auto"><br />
+            <input type="submit" class="btn btn-primary" value="download"><br />
+        </form>
+        <br />
+        <a href="/clear">clear all files</a><br>
+        <a href="/list">list all files</a>
+        <hr>
+        <h1>Upload from Local</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <label for="chooseFile">Choose local file</label>
+            <input type="file" id="chooseFile" name="file"><br><br>
+            <input type="submit" class="btn btn-primary" value="Upload from local">
+        </form>
+    </div>
 </body>
+
 </html>
